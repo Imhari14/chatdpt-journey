@@ -1,10 +1,36 @@
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Mic, Play, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mic, Play, FileText, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 const Index = () => {
   const [isStarted, setIsStarted] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    setIsLoading(true);
+    setMessages(prev => [...prev, { role: "user", content: input }]);
+    setInput("");
+
+    // Simulated response for now - we'll integrate real API later
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "I understand your interest in process mining. Could you tell me more about your current business processes and challenges?" 
+      }]);
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-secondary to-background">
@@ -76,10 +102,54 @@ const Index = () => {
             transition={{ duration: 0.2 }}
             className="max-w-4xl mx-auto glass rounded-2xl p-6"
           >
-            <div className="h-[600px] flex items-center justify-center">
-              <p className="text-muted-foreground">
-                Voice chat interface coming soon...
-              </p>
+            <div className="h-[600px] flex flex-col">
+              <div className="flex-1 overflow-y-auto space-y-4 p-4">
+                <AnimatePresence>
+                  {messages.map((message, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                          message.role === "user"
+                            ? "bg-primary text-white"
+                            : "bg-secondary"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+              
+              <div className="border-t p-4">
+                <div className="flex gap-2">
+                  <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type your message..."
+                    className="resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={isLoading || !input.trim()}
+                    className="p-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
