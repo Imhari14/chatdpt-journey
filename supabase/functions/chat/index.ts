@@ -37,7 +37,52 @@ serve(async (req) => {
       }),
     });
 
-    return new Response(response.body, {
+    // Create a TransformStream to handle the streaming response
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    // Process the stream
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    (async () => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            await writer.close();
+            break;
+          }
+
+          // Convert the chunk to text and process it
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(5);
+              if (data === '[DONE]') continue;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices[0]?.delta?.content || '';
+                if (content) {
+                  await writer.write(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
+                }
+              } catch (e) {
+                console.error('Error parsing chunk:', e);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error processing stream:', error);
+        await writer.abort(error);
+      }
+    })();
+
+    return new Response(readable, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
