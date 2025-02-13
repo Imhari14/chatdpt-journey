@@ -15,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
+    console.log('Received messages:', messages); // Added logging
     
     // Call Azure OpenAI API
     const response = await fetch('https://models.inference.ai.azure.com/v1/chat/completions', {
@@ -33,63 +34,54 @@ serve(async (req) => {
           ...messages
         ],
         stream: true,
+        max_tokens: 1000,
         temperature: 0.7,
       }),
     });
 
-    // Create a TransformStream to handle the streaming response
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const encoder = new TextEncoder();
+    // Create and configure the streaming response
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          controller.close();
+          return;
+        }
 
-    // Process the stream
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response body');
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              break;
+            }
 
-    (async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            await writer.close();
-            break;
-          }
+            const text = new TextDecoder().decode(value);
+            const lines = text.split('\n').filter(line => line.trim());
 
-          // Convert the chunk to text and process it
-          const chunk = new TextDecoder().decode(value);
-          const lines = chunk.split('\n').filter(line => line.trim() !== '');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(5);
-              if (data === '[DONE]') continue;
-              
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices[0]?.delta?.content || '';
-                if (content) {
-                  await writer.write(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
-                }
-              } catch (e) {
-                console.error('Error parsing chunk:', e);
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                controller.enqueue(new TextEncoder().encode(line + '\n'));
               }
             }
           }
+        } catch (error) {
+          console.error('Stream processing error:', error);
+          controller.error(error);
         }
-      } catch (error) {
-        console.error('Error processing stream:', error);
-        await writer.abort(error);
-      }
-    })();
+      },
+    });
 
-    return new Response(readable, {
+    return new Response(stream, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
       },
     });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in chat function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
