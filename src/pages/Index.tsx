@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Play, FileText, Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -23,21 +25,13 @@ const Index = () => {
     setInput("");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: [...messages, newMessage],
-          }),
-        }
-      );
+      const { data: response, error } = await supabase.functions.invoke('chat', {
+        body: {
+          messages: [...messages, newMessage],
+        },
+      });
 
-      if (!response.ok) throw new Error('Failed to get response');
+      if (error) throw error;
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
