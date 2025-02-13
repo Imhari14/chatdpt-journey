@@ -15,10 +15,10 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    console.log('Received messages:', messages); // Added logging
+    console.log('Sending request to Azure OpenAI with messages:', messages);
     
-    // Call Azure OpenAI API
-    const response = await fetch('https://models.inference.ai.azure.com/v1/chat/completions', {
+    // Call Azure OpenAI API with the correct endpoint structure
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('GITHUB_TOKEN')}`,
@@ -39,7 +39,13 @@ serve(async (req) => {
       }),
     });
 
-    // Create and configure the streaming response
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Azure OpenAI API error:', errorData);
+      throw new Error(`Azure OpenAI API error: ${response.status}`);
+    }
+
+    // Set up streaming response
     const stream = new ReadableStream({
       async start(controller) {
         const reader = response.body?.getReader();
@@ -48,20 +54,25 @@ serve(async (req) => {
           return;
         }
 
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+
         try {
           while (true) {
             const { done, value } = await reader.read();
+            
             if (done) {
               controller.close();
               break;
             }
 
-            const text = new TextDecoder().decode(value);
-            const lines = text.split('\n').filter(line => line.trim());
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
-                controller.enqueue(new TextEncoder().encode(line + '\n'));
+                // Forward the raw SSE data to the client
+                controller.enqueue(encoder.encode(line + '\n\n'));
               }
             }
           }
@@ -69,7 +80,7 @@ serve(async (req) => {
           console.error('Stream processing error:', error);
           controller.error(error);
         }
-      },
+      }
     });
 
     return new Response(stream, {
