@@ -15,13 +15,20 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    console.log('Sending request to OpenAI with messages:', messages);
+    console.log('Processing request with messages:', messages);
     
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not found');
-    }
+    console.log('API Key present:', !!openAIApiKey);
     
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not found in environment variables');
+    }
+
+    if (!openAIApiKey.startsWith('sk-')) {
+      throw new Error('Invalid OpenAI API key format');
+    }
+
+    console.log('Sending request to OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -45,8 +52,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error response:', errorData);
+      console.error('Response status:', response.status);
+      console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
     }
 
     // Set up streaming response
