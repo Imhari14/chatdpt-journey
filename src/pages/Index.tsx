@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Play, FileText, Send, ChevronRight } from "lucide-react";
+import { Mic, Play, FileText, Send, ChevronRight, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -130,6 +129,17 @@ const Index = () => {
               </button>
             </Link>
 
+            <Link to="/demo/business-dialogue" className="w-full">
+              <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-sm font-medium mb-1">Business Translation</h3>
+                <p className="text-xs text-gray-400">Bridge the gap</p>
+                <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
+              </button>
+            </Link>
+
             <Link to="/demo/video" className="w-full">
               <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
@@ -205,4 +215,3 @@ const Index = () => {
 };
 
 export default Index;
-
