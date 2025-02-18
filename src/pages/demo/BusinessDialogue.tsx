@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, MessageSquare, Code, Lightbulb, ChevronDown } from "lucide-react";
+import { ArrowLeft, MessageSquare, Code, Lightbulb, ChevronDown, Database } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface DialogueItem {
@@ -14,6 +14,11 @@ interface DialogueItem {
     question: string;
     implementation: string;
     methodology: string;
+    dataRequirements: {
+      tables: string[];
+      fields: string[];
+      description: string;
+    };
   };
   category: string;
 }
@@ -34,7 +39,20 @@ const BusinessDialogue = () => {
       technical: {
         question: "How can we implement process variant analysis to identify performance bottlenecks?",
         implementation: "Using process mining algorithms to analyze event logs and identify process variants with statistical significance.",
-        methodology: "Apply clustering algorithms to detect process variants, calculate performance metrics per variant, and identify root causes of delays."
+        methodology: "Apply clustering algorithms to detect process variants, calculate performance metrics per variant, and identify root causes of delays.",
+        dataRequirements: {
+          tables: ["trade_execution", "trade_status_history", "trade_settlement"],
+          fields: [
+            "trade_id", 
+            "execution_timestamp",
+            "status_change_timestamp",
+            "current_status",
+            "previous_status",
+            "settlement_timestamp",
+            "processing_duration"
+          ],
+          description: "We need comprehensive trade lifecycle data with timestamps for each status change to analyze processing times and identify bottlenecks. Historical status changes are crucial for pattern detection."
+        }
       }
     },
     {
@@ -47,7 +65,20 @@ const BusinessDialogue = () => {
       technical: {
         question: "What machine learning approaches can we use to identify automation opportunities in the trade processing workflow?",
         implementation: "Combine process mining with ML to identify patterns in manual interventions and assess automation potential.",
-        methodology: "Use sequence mining and pattern recognition to identify repetitive tasks suitable for RPA implementation."
+        methodology: "Use sequence mining and pattern recognition to identify repetitive tasks suitable for RPA implementation.",
+        dataRequirements: {
+          tables: ["manual_interventions", "trade_processing", "user_actions"],
+          fields: [
+            "intervention_id",
+            "trade_id",
+            "action_type",
+            "user_id",
+            "timestamp",
+            "intervention_reason",
+            "resolution_steps"
+          ],
+          description: "Access to manual intervention logs and user action data will help identify patterns in routine tasks that could be automated. Include resolution steps to understand the logic needed for automation."
+        }
       }
     },
     {
@@ -60,7 +91,19 @@ const BusinessDialogue = () => {
       technical: {
         question: "What predictive models can we build using process mining data to forecast settlement risks?",
         implementation: "Develop predictive models using historical process data to identify risk patterns.",
-        methodology: "Combine process mining metrics with machine learning to create real-time risk scoring models."
+        methodology: "Combine process mining metrics with machine learning to create real-time risk scoring models.",
+        dataRequirements: {
+          tables: ["trade_risk_factors", "historical_failures", "trade_attributes"],
+          fields: [
+            "risk_score",
+            "failure_reason",
+            "trade_characteristics",
+            "counterparty_info",
+            "market_conditions",
+            "historical_performance"
+          ],
+          description: "Historical trade failure data combined with risk factors and trade attributes will enable predictive modeling. Include market conditions and counterparty information for comprehensive risk assessment."
+        }
       }
     },
     {
@@ -73,7 +116,20 @@ const BusinessDialogue = () => {
       technical: {
         question: "How can we implement continuous compliance monitoring using process mining?",
         implementation: "Create conformance checking algorithms to compare actual vs. required processes.",
-        methodology: "Apply temporal logic and pattern matching to verify compliance rules in real-time."
+        methodology: "Apply temporal logic and pattern matching to verify compliance rules in real-time.",
+        dataRequirements: {
+          tables: ["compliance_rules", "trade_compliance_checks", "regulatory_requirements"],
+          fields: [
+            "rule_id",
+            "check_timestamp",
+            "compliance_status",
+            "rule_type",
+            "violation_details",
+            "resolution_status",
+            "audit_trail"
+          ],
+          description: "Complete compliance check history with detailed rule definitions and audit trails. Include both passed and failed checks to build comprehensive compliance patterns."
+        }
       }
     },
     {
@@ -86,7 +142,21 @@ const BusinessDialogue = () => {
       technical: {
         question: "How can we optimize the end-to-end process latency using performance mining?",
         implementation: "Apply performance mining techniques to identify bottlenecks and optimization opportunities.",
-        methodology: "Use critical path analysis and bottleneck detection algorithms on process event logs."
+        methodology: "Use critical path analysis and bottleneck detection algorithms on process event logs.",
+        dataRequirements: {
+          tables: ["process_steps", "system_performance", "resource_utilization"],
+          fields: [
+            "step_id",
+            "step_duration",
+            "start_time",
+            "end_time",
+            "resource_id",
+            "queue_time",
+            "processing_time",
+            "system_load"
+          ],
+          description: "Detailed timing data for each process step, including both queue and processing times. Resource utilization metrics help identify capacity-related bottlenecks."
+        }
       }
     }
   ];
@@ -227,6 +297,40 @@ const BusinessDialogue = () => {
                             <div className="flex items-start gap-3">
                               <Lightbulb className="w-4 h-4 text-primary mt-1" />
                               <p className="text-gray-400">{item.technical.methodology}</p>
+                            </div>
+                          </div>
+                          <div className="bg-gray-900/50 rounded-lg p-4 mt-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Database className="w-4 h-4 text-primary" />
+                              <h4 className="text-sm font-medium text-primary">Required Data Schema</h4>
+                            </div>
+                            <div className="space-y-3">
+                              <div>
+                                <h5 className="text-xs font-medium text-gray-400 mb-1">Required Tables</h5>
+                                <div className="flex flex-wrap gap-2">
+                                  {item.technical.dataRequirements.tables.map((table, i) => (
+                                    <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
+                                      {table}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h5 className="text-xs font-medium text-gray-400 mb-1">Key Fields</h5>
+                                <div className="flex flex-wrap gap-2">
+                                  {item.technical.dataRequirements.fields.map((field, i) => (
+                                    <span key={i} className="px-2 py-1 bg-gray-800/50 rounded text-xs text-gray-400">
+                                      {field}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <div>
+                                <h5 className="text-xs font-medium text-gray-400 mb-1">Data Context</h5>
+                                <p className="text-sm text-gray-400">
+                                  {item.technical.dataRequirements.description}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </>
