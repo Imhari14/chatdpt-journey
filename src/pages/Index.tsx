@@ -162,7 +162,7 @@ const Index = () => {
             className="max-w-4xl mx-auto"
           >
             {storyStep === 0 ? (
-              <DemoCards onStartJourney={() => setStoryStep(1)} />
+              <DemoCards onStartJourney={() => setStoryStep(0)} />
             ) : (
               renderStoryStep()
             )}
