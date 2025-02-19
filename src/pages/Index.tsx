@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Play, FileText, Send, ChevronRight, MessageSquare, Building2, ArrowRight } from "lucide-react";
@@ -116,32 +115,26 @@ const Index = () => {
             exit={{ opacity: 0, y: -20 }}
             className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
           >
-            <h2 className="text-2xl font-bold mb-6">Let's Start Your Process Mining Journey</h2>
-            <p className="text-gray-400 mb-6">
-              Every business has its unique story. To help you better understand how process mining can transform your operations,
-              let's start by understanding your world.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-400 mb-2 block">What sector do you work in?</label>
+            <h2 className="text-2xl font-bold mb-6">Share Your Business Story</h2>
+            <div className="space-y-6">
+              <p className="text-gray-400 text-lg leading-relaxed">
+                Hello! I'm working in the industry of{" "}
                 <Input
-                  placeholder="e.g., Banking, Manufacturing, Healthcare..."
+                  placeholder="e.g., Healthcare, Banking, Manufacturing"
                   value={storyData.sector}
                   onChange={(e) => setStoryData(prev => ({ ...prev, sector: e.target.value }))}
-                  className="bg-gray-800/50 border-gray-700 text-white"
+                  className="bg-gray-800/50 border-gray-700 text-white inline-block w-64 mx-2"
                 />
-              </div>
-              <div>
-                <label className="text-sm text-gray-400 mb-2 block">What's your role?</label>
+                {" "}as a{" "}
                 <Input
-                  placeholder="e.g., Operations Manager, Process Analyst..."
+                  placeholder="e.g., Process Manager, Analyst"
                   value={storyData.role}
                   onChange={(e) => setStoryData(prev => ({ ...prev, role: e.target.value }))}
-                  className="bg-gray-800/50 border-gray-700 text-white"
-                />
-              </div>
+                  className="bg-gray-800/50 border-gray-700 text-white inline-block w-64 mx-2"
+                />.
+              </p>
               <Button 
-                className="w-full"
+                className="w-full mt-6"
                 onClick={() => setStoryStep(1)}
                 disabled={!storyData.sector || !storyData.role}
               >
@@ -160,20 +153,17 @@ const Index = () => {
             className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
           >
             <h2 className="text-2xl font-bold mb-6">Tell Us About Your Process</h2>
-            <p className="text-gray-400 mb-6">
-              Think about a key business process that you'd like to improve. It could be anything from order processing
-              to customer service workflows.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-400 mb-2 block">Describe your process briefly</label>
+            <div className="space-y-6">
+              <p className="text-gray-400 text-lg leading-relaxed">
+                In my organization, one of our key processes that I want to improve is{" "}
                 <Textarea
-                  placeholder="e.g., Our customer onboarding process involves multiple departments and takes longer than it should..."
+                  placeholder="e.g., the customer onboarding process which involves multiple departments"
                   value={storyData.processDescription}
                   onChange={(e) => setStoryData(prev => ({ ...prev, processDescription: e.target.value }))}
-                  className="bg-gray-800/50 border-gray-700 text-white min-h-[100px]"
+                  className="bg-gray-800/50 border-gray-700 text-white inline-block w-full my-2"
                 />
-              </div>
+                .
+              </p>
               <div className="flex gap-4">
                 <Button 
                   variant="outline"
@@ -201,21 +191,18 @@ const Index = () => {
             exit={{ opacity: 0, y: -20 }}
             className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
           >
-            <h2 className="text-2xl font-bold mb-6">What Challenges Are You Facing?</h2>
-            <p className="text-gray-400 mb-6">
-              Share the pain points or challenges you're experiencing with this process. This will help us
-              show you how process mining can specifically address your needs.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-400 mb-2 block">Describe your challenges</label>
+            <h2 className="text-2xl font-bold mb-6">Share Your Challenges</h2>
+            <div className="space-y-6">
+              <p className="text-gray-400 text-lg leading-relaxed">
+                The main challenges we face with this process are{" "}
                 <Textarea
-                  placeholder="e.g., We don't know where the bottlenecks are, there's no visibility into the process..."
+                  placeholder="e.g., long processing times, lack of visibility into bottlenecks, and inconsistent quality"
                   value={storyData.painPoints}
                   onChange={(e) => setStoryData(prev => ({ ...prev, painPoints: e.target.value }))}
-                  className="bg-gray-800/50 border-gray-700 text-white min-h-[100px]"
+                  className="bg-gray-800/50 border-gray-700 text-white inline-block w-full my-2"
                 />
-              </div>
+                . I'm looking to understand how process mining can help address these issues.
+              </p>
               <div className="flex gap-4">
                 <Button 
                   variant="outline"
@@ -271,7 +258,7 @@ const Index = () => {
             {storyStep === 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <button 
-                  onClick={() => setStoryStep(1)} // Changed from setStoryStep(0) to setStoryStep(1)
+                  onClick={() => setStoryStep(1)}
                   className="col-span-1 md:col-span-3 neo-blur hover:bg-gray-800/50 transition-all p-8 rounded-2xl text-center group"
                 >
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
@@ -279,7 +266,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Start Your Journey</h3>
                   <p className="text-sm text-gray-400">
-                    Tell us your story and discover how process mining can transform your business
+                    Share your story and discover how process mining can transform your business
                   </p>
                 </button>
 
