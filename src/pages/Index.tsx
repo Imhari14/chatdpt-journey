@@ -1,13 +1,23 @@
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Play, FileText, Send, ChevronRight, MessageSquare } from "lucide-react";
+import { Mic, Play, FileText, Send, ChevronRight, MessageSquare, Building2, ArrowRight } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface StoryData {
+  sector: string;
+  role: string;
+  painPoints: string;
+  processDescription: string;
 }
 
 const Index = () => {
@@ -15,6 +25,13 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [storyStep, setStoryStep] = useState(0);
+  const [storyData, setStoryData] = useState<StoryData>({
+    sector: "",
+    role: "",
+    painPoints: "",
+    processDescription: "",
+  });
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -78,6 +95,151 @@ const Index = () => {
     }
   };
 
+  const handleStoryComplete = () => {
+    setIsStarted(true);
+    const initialMessage: Message = {
+      role: "assistant",
+      content: `Thank you for sharing your story! I understand you're in the ${storyData.sector} sector as a ${storyData.role}. 
+      Based on your process description and pain points, I can help you understand how process mining can specifically address your challenges. 
+      Feel free to ask any questions about how we can optimize your processes and solve the issues you're facing.`
+    };
+    setMessages([initialMessage]);
+  };
+
+  const renderStoryStep = () => {
+    switch (storyStep) {
+      case 0:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
+          >
+            <h2 className="text-2xl font-bold mb-6">Let's Start Your Process Mining Journey</h2>
+            <p className="text-gray-400 mb-6">
+              Every business has its unique story. To help you better understand how process mining can transform your operations,
+              let's start by understanding your world.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">What sector do you work in?</label>
+                <Input
+                  placeholder="e.g., Banking, Manufacturing, Healthcare..."
+                  value={storyData.sector}
+                  onChange={(e) => setStoryData(prev => ({ ...prev, sector: e.target.value }))}
+                  className="bg-gray-800/50 border-gray-700 text-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">What's your role?</label>
+                <Input
+                  placeholder="e.g., Operations Manager, Process Analyst..."
+                  value={storyData.role}
+                  onChange={(e) => setStoryData(prev => ({ ...prev, role: e.target.value }))}
+                  className="bg-gray-800/50 border-gray-700 text-white"
+                />
+              </div>
+              <Button 
+                className="w-full"
+                onClick={() => setStoryStep(1)}
+                disabled={!storyData.sector || !storyData.role}
+              >
+                Continue <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        );
+
+      case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
+          >
+            <h2 className="text-2xl font-bold mb-6">Tell Us About Your Process</h2>
+            <p className="text-gray-400 mb-6">
+              Think about a key business process that you'd like to improve. It could be anything from order processing
+              to customer service workflows.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Describe your process briefly</label>
+                <Textarea
+                  placeholder="e.g., Our customer onboarding process involves multiple departments and takes longer than it should..."
+                  value={storyData.processDescription}
+                  onChange={(e) => setStoryData(prev => ({ ...prev, processDescription: e.target.value }))}
+                  className="bg-gray-800/50 border-gray-700 text-white min-h-[100px]"
+                />
+              </div>
+              <div className="flex gap-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => setStoryStep(0)}
+                >
+                  Back
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => setStoryStep(2)}
+                  disabled={!storyData.processDescription}
+                >
+                  Continue <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 2:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-2xl mx-auto neo-blur rounded-2xl p-8"
+          >
+            <h2 className="text-2xl font-bold mb-6">What Challenges Are You Facing?</h2>
+            <p className="text-gray-400 mb-6">
+              Share the pain points or challenges you're experiencing with this process. This will help us
+              show you how process mining can specifically address your needs.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">Describe your challenges</label>
+                <Textarea
+                  placeholder="e.g., We don't know where the bottlenecks are, there's no visibility into the process..."
+                  value={storyData.painPoints}
+                  onChange={(e) => setStoryData(prev => ({ ...prev, painPoints: e.target.value }))}
+                  className="bg-gray-800/50 border-gray-700 text-white min-h-[100px]"
+                />
+              </div>
+              <div className="flex gap-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => setStoryStep(1)}
+                >
+                  Back
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={handleStoryComplete}
+                  disabled={!storyData.painPoints}
+                >
+                  Start Conversation <MessageSquare className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="container px-4 py-8 mx-auto">
@@ -104,52 +266,59 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="max-w-4xl mx-auto"
           >
-            <Link to="/demo/chat" className="col-span-1 md:col-span-3">
-              <button className="w-full neo-blur hover:bg-gray-800/50 transition-all p-8 rounded-2xl text-center group">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
-                  <Mic className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Start Conversation</h3>
-                <p className="text-sm text-gray-400">
-                  Begin your journey to process optimization
-                </p>
-              </button>
-            </Link>
+            {storyStep === 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button 
+                  onClick={() => setStoryStep(0)} 
+                  className="col-span-1 md:col-span-3 neo-blur hover:bg-gray-800/50 transition-all p-8 rounded-2xl text-center group"
+                >
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
+                    <Building2 className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Start Your Journey</h3>
+                  <p className="text-sm text-gray-400">
+                    Tell us your story and discover how process mining can transform your business
+                  </p>
+                </button>
 
-            <Link to="/demo/guide" className="w-full">
-              <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-medium mb-1">Interactive Guide</h3>
-                <p className="text-xs text-gray-400">Learn the basics</p>
-                <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
-              </button>
-            </Link>
+                <Link to="/demo/guide" className="w-full">
+                  <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-medium mb-1">Interactive Guide</h3>
+                    <p className="text-xs text-gray-400">Learn the basics</p>
+                    <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
+                  </button>
+                </Link>
 
-            <Link to="/demo/business-dialogue" className="w-full">
-              <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-medium mb-1">Business Translation</h3>
-                <p className="text-xs text-gray-400">Bridge the gap</p>
-                <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
-              </button>
-            </Link>
+                <Link to="/demo/business-dialogue" className="w-full">
+                  <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
+                      <MessageSquare className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-medium mb-1">Business Translation</h3>
+                    <p className="text-xs text-gray-400">Bridge the gap</p>
+                    <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
+                  </button>
+                </Link>
 
-            <Link to="/demo/video" className="w-full">
-              <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-medium mb-1">Watch Demo</h3>
-                <p className="text-xs text-gray-400">See it in action</p>
-                <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
-              </button>
-            </Link>
+                <Link to="/demo/video" className="w-full">
+                  <button className="w-full h-full neo-blur hover:bg-gray-800/50 transition-all p-6 rounded-xl text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
+                      <Play className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-medium mb-1">Watch Demo</h3>
+                    <p className="text-xs text-gray-400">See it in action</p>
+                    <ChevronRight className="w-4 h-4 mx-auto mt-2 text-gray-400" />
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              renderStoryStep()
+            )}
           </motion.div>
         ) : (
           <motion.div
