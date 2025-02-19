@@ -271,7 +271,7 @@ const Index = () => {
             {storyStep === 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <button 
-                  onClick={() => setStoryStep(0)} 
+                  onClick={() => setStoryStep(1)} // Changed from setStoryStep(0) to setStoryStep(1)
                   className="col-span-1 md:col-span-3 neo-blur hover:bg-gray-800/50 transition-all p-8 rounded-2xl text-center group"
                 >
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
