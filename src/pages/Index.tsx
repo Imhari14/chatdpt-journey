@@ -6,22 +6,79 @@ import { pcmToWav } from "@/utils/audioUtils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Video, VideoOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'human' | 'assistant'; content: string }>>([]);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const geminiService = useRef(new GeminiService());
-  const speechSynthesis = useRef<SpeechSynthesis>(window.speechSynthesis);
+  const { toast } = useToast();
 
   const speakResponse = useCallback((text: string) => {
-    if (speechSynthesis.current) {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(text);
-      speechSynthesis.current.speak(utterance);
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsSpeaking(false);
+        toast({
+          title: "Speech Error",
+          description: "Could not play the voice response",
+          variant: "destructive"
+        });
+      };
+
+      // Get available voices and try to use a preferred one
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.lang.startsWith('en') && voice.name.includes('Google')
+      ) || voices.find(voice => 
+        voice.lang.startsWith('en')
+      );
+
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech synthesis not supported');
+      toast({
+        title: "Not Supported",
+        description: "Speech synthesis is not supported in your browser",
+        variant: "destructive"
+      });
     }
+  }, [toast]);
+
+  // Load voices when the component mounts
+  useEffect(() => {
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
   }, []);
 
   const processAudio = async (audioData: ArrayBuffer) => {
@@ -41,6 +98,11 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error processing audio:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process audio input",
+        variant: "destructive"
+      });
     }
   };
 
@@ -72,6 +134,11 @@ const Index = () => {
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start recording",
+        variant: "destructive"
+      });
     }
   };
 
@@ -92,9 +159,7 @@ const Index = () => {
   useEffect(() => {
     return () => {
       stopRecording();
-      if (speechSynthesis.current) {
-        speechSynthesis.current.cancel();
-      }
+      window.speechSynthesis.cancel();
     };
   }, []);
 
@@ -116,6 +181,11 @@ const Index = () => {
           <p className="mt-6 text-lg text-gray-400 max-w-2xl mx-auto">
             Talk naturally with Gemini AI using your voice.
           </p>
+          {isSpeaking && (
+            <span className="mt-4 inline-block px-3 py-1 text-sm bg-primary/20 text-primary rounded-full">
+              Speaking...
+            </span>
+          )}
         </motion.div>
 
         <div className="max-w-4xl mx-auto">
