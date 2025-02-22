@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-const MODEL_NAME = "gemini-1.5-pro";
+const MODEL_NAME = "gemini-2.0-pro-exp-02-05";
 
 export class GeminiService {
   private model;
