@@ -2,13 +2,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-const MODEL_NAME = "gemini-1.5-flash-8b";
+const MODEL_NAME = "gemini-1.5-pro";
 
 export class GeminiService {
   private model;
 
   constructor() {
     this.model = genAI.getGenerativeModel({ model: MODEL_NAME });
+  }
+
+  async chat(message: string): Promise<string> {
+    try {
+      const result = await this.model.generateContent([
+        { text: message }
+      ]);
+      return result.response.text();
+    } catch (error) {
+      console.error("Chat error:", error);
+      throw error;
+    }
   }
 
   async transcribeAudio(audioBase64: string, mimeType: string = "audio/wav"): Promise<string> {

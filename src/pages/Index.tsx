@@ -5,7 +5,7 @@ import { GeminiService } from "@/services/geminiService";
 import { pcmToWav } from "@/utils/audioUtils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Video, VideoOff, MessageSquare } from "lucide-react";
+import { Video, VideoOff } from "lucide-react";
 
 const Index = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -15,6 +15,14 @@ const Index = () => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const geminiService = useRef(new GeminiService());
+  const speechSynthesis = useRef<SpeechSynthesis>(window.speechSynthesis);
+
+  const speakResponse = useCallback((text: string) => {
+    if (speechSynthesis.current) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.current.speak(utterance);
+    }
+  }, []);
 
   const processAudio = async (audioData: ArrayBuffer) => {
     try {
@@ -22,10 +30,14 @@ const Index = () => {
       const transcription = await geminiService.current.transcribeAudio(wavData);
       
       if (transcription.trim()) {
-        setMessages(prev => [...prev, 
-          { role: 'human', content: transcription },
-          { role: 'assistant', content: `I heard: "${transcription}"` }
-        ]);
+        setMessages(prev => [...prev, { role: 'human', content: transcription }]);
+        
+        // Get Gemini's response
+        const response = await geminiService.current.chat(transcription);
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+        
+        // Speak the response
+        speakResponse(response);
       }
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -80,6 +92,9 @@ const Index = () => {
   useEffect(() => {
     return () => {
       stopRecording();
+      if (speechSynthesis.current) {
+        speechSynthesis.current.cancel();
+      }
     };
   }, []);
 
